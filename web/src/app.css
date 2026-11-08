@@ -1,0 +1,57 @@
+/* The few layouts this product needs that @openasy/ui's prebuilt styles do not include. Colours stay in the library's tokens. */
+
+.forms-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.forms-halves,
+.forms-side,
+.forms-side-wide,
+.forms-thirds {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 1280px) {
+  .forms-halves {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .forms-side {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+  .forms-side-wide {
+    grid-template-columns: minmax(0, 1fr) 380px;
+  }
+  .forms-thirds {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.forms-settings-list {
+  grid-template-columns: minmax(120px, 40%) minmax(0, 1fr);
+  margin: 0;
+}
+
+.forms-facts {
+  grid-template-columns: 120px minmax(0, 1fr);
+  margin: 0;
+}
+
+.forms-types {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.forms-code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The preview is drawn by the form script with its own styles, in the page's colours. */
+.forms-preview {
+  color: var(--oa-fg);
+  font-size: 0.875rem;
+  --oaf-accent: var(--oa-accent);
+}
+.forms-preview .oaf-title {
+  font-size: 1rem;
+}

@@ -1,0 +1,135 @@
+# Forms' settings. This file is the only place forms are added, changed and removed; a change is picked up within a
+# minute, and a file with a mistake leaves the last good one in place. The answers are read in the UI.
+language: en # the form pages' language when the browser asks for none the form is written in
+time_zone: Europe/Istanbul
+
+# Spam filters for every form; a form may set its own. No third-party CAPTCHA is loaded unless captcha is set below.
+spam:
+  min_time: 3s # an answer sooner than this after the page loaded is a bot's
+  rate: 5/m # answers a form takes from one address
+  # proof_of_work: 16   # the page finds a hash with this many zero bits while people type
+
+partials: progress # off, progress (how far people got) or answers (what they wrote too)
+keep: { partials: 30d, spam: 30d } # responses: forever, unless you set a duration such as 2y
+
+# mail:
+#   host: smtp.example.com
+#   from: Forms <forms@example.com>
+#   user: forms@example.com
+#   password: FORMS_MAIL_PASSWORD   # names the variable, never the password
+
+# The script of an OpenAsy Analytics site, put on every form page; list Forms' address in that site's domains.
+# analytics: https://analytics.example.com/s/forms.js
+
+# captcha: { provider: turnstile, site_key: 0x4AAAAAAA..., secret: FORMS_CAPTCHA_SECRET }
+
+# The products answers go to. Each token names an environment variable that holds an API token of that product.
+# consent: { url: http://consent:8080, token: FORMS_CONSENT_TOKEN }     # editor role
+# audience: { url: http://audience:8080, token: FORMS_AUDIENCE_TOKEN }  # editor role
+# crm: { url: http://crm:8080, token: FORMS_CRM_TOKEN }                 # editor role
+# helpdesk: { url: http://helpdesk:8080, key: FORMS_HELPDESK_KEY }      # the key of Helpdesk's forms source
+
+# webhooks:
+#   zapier: { url: https://hooks.zapier.com/hooks/catch/1/abc/, secret: FORMS_WEBHOOK_SECRET }
+
+forms:
+  demo:
+    name: Demo request
+    kind: lead
+    title: { en: Book a demo, tr: Demo isteyin, de: Demo anfragen }
+    description:
+      en: Tell us a little about your team and we will show you around in 30 minutes.
+      tr: Ekibinizi biraz anlatın, size 30 dakikada her şeyi gösterelim.
+      de: Erzählen Sie uns kurz von Ihrem Team, dann zeigen wir Ihnen in 30 Minuten alles.
+    embed: [https://www.example.com] # sites whose pages may show it with the script tag
+    hidden: [plan] # filled from the page's address: ?plan=business
+    pages:
+      - title: { en: About you, tr: Sizi tanıyalım, de: Über Sie }
+        fields:
+          - { id: name, type: text, label: { en: Name, tr: Ad soyad, de: Name }, required: true }
+          - { id: email, type: email, label: { en: Work email, tr: İş e-postası, de: Geschäftliche E-Mail }, required: true }
+          - { id: company, type: text, label: { en: Company, tr: Şirket, de: Firma } }
+          - id: size
+            type: choice
+            label: { en: Team size, tr: Ekip büyüklüğü, de: Teamgröße }
+            options: [1-10, 11-50, 51-200, 200+]
+            required: true
+      - title: { en: Your team, tr: Ekibiniz, de: Ihr Team }
+        show_if: { field: size, in: [51-200, 200+] } # only larger teams see this page
+        fields:
+          - id: region
+            type: select
+            label: { en: Region, tr: Bölge, de: Region }
+            options:
+              - { value: emea, label: { en: "Europe, Middle East and Africa", tr: "Avrupa, Orta Doğu ve Afrika", de: "Europa, Nahost und Afrika" } }
+              - { value: americas, label: { en: Americas, tr: Amerika, de: Amerika } }
+              - { value: apac, label: { en: Asia Pacific, tr: Asya Pasifik, de: Asien-Pazifik } }
+            required: true
+            trait: region # sets the person's region trait in Audience
+      - fields:
+          - { id: message, type: textarea, label: { en: Anything we should know?, tr: Bilmemiz gereken bir şey var mı?, de: Sollten wir etwas wissen? } }
+          - id: marketing
+            type: consent # recorded in Consent with the text of the purpose's version shown
+            purpose: marketing
+            channels: [email]
+            label:
+              {
+                en: Send me offers and news by email,
+                tr: Bana e-postayla kampanya ve duyurular gönderin,
+                de: Senden Sie mir Angebote und Neuigkeiten per E-Mail,
+              }
+    thanks:
+      {
+        en: Thank you. We will write within one working day.,
+        tr: Teşekkürler. Bir iş günü içinde yazacağız.,
+        de: Danke. Wir melden uns innerhalb eines Werktags.,
+      }
+    send_to:
+      crm:
+        title: "Demo: {company}"
+        owner_by: { field: region, owners: { emea: emily@example.com, americas: hakan@example.com, apac: hakan@example.com } }
+      # notify: [sales@example.com]
+
+  contact:
+    name: Contact us
+    kind: contact
+    title: { en: Write to us, tr: Bize yazın, de: Schreiben Sie uns }
+    fields:
+      - { id: name, type: text, label: { en: Name, tr: Ad soyad, de: Name } }
+      - { id: email, type: email, label: { en: Email, tr: E-posta, de: E-Mail }, required: true }
+      - {
+          id: topic,
+          type: select,
+          label: { en: Topic, tr: Konu, de: Thema },
+          options:
+            [
+              { value: billing, label: { en: Billing, tr: Fatura, de: Rechnung } },
+              { value: other, label: { en: Something else, tr: Başka bir konu, de: Etwas anderes } },
+            ],
+        }
+      - { id: message, type: textarea, label: { en: Message, tr: Mesaj, de: Nachricht }, required: true, min: 10 }
+      - { id: screenshot, type: file, label: { en: Screenshot, tr: Ekran görüntüsü, de: Bildschirmfoto }, types: [png, jpeg, pdf], max_size: 5MB }
+    send_to:
+      helpdesk: { form: contact, subject: "{topic}" }
+
+  nps:
+    name: Quarterly NPS
+    kind: nps
+    title: { en: A quick question, tr: Kısa bir soru, de: Eine kurze Frage }
+    hidden: [email] # sent in the survey link: ?email=...
+    person: { email: email }
+    fields:
+      - id: score
+        type: nps
+        label:
+          {
+            en: How likely are you to recommend us to a colleague?,
+            tr: Bizi bir meslektaşınıza önerme olasılığınız nedir?,
+            de: Wie wahrscheinlich empfehlen Sie uns weiter?,
+          }
+        required: true
+      - id: why
+        type: textarea
+        label: { en: What should we do better?, tr: Neyi daha iyi yapmalıyız?, de: Was sollten wir besser machen? }
+        show_if: { field: score, below: 9 }
+    partials: off

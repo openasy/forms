@@ -1,0 +1,4518 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAsy Forms",
+    "version": "0.1.0",
+    "description": "Lead, contact and NPS forms set in forms.yaml: the public API pages and the embed script call, the answers for members, and the erasure contract Audience calls. Viewers read everything; editors mark spam, send again and delete answers; admins take erasures.",
+    "license": {
+      "name": "AGPL-3.0-only",
+      "identifier": "AGPL-3.0-only"
+    }
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "session": []
+    },
+    {
+      "apiToken": []
+    },
+    {
+      "adminToken": []
+    }
+  ],
+  "paths": {
+    "/api/v1/version": {
+      "get": {
+        "operationId": "version",
+        "tags": [
+          "Product"
+        ],
+        "summary": "The product and its version",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Version"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "operationId": "products",
+        "tags": [
+          "Product"
+        ],
+        "summary": "The install's other products",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "viewer",
+        "description": "Needs the viewer role."
+      }
+    },
+    "/api/v1/summary": {
+      "get": {
+        "operationId": "summary",
+        "tags": [
+          "Product"
+        ],
+        "summary": "Answers this week and sending that failed",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Summary"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "viewer",
+        "description": "Needs the viewer role."
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "operationId": "settings",
+        "tags": [
+          "Product"
+        ],
+        "summary": "The settings file as applied",
+        "description": "Read-only: forms and settings are changed in forms.yaml, never through the API.\n\nNeeds the viewer role.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/integrations": {
+      "get": {
+        "operationId": "integrations",
+        "tags": [
+          "Product"
+        ],
+        "summary": "The linked products and how sending to them goes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Integrations"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "viewer",
+        "description": "Needs the viewer role."
+      }
+    },
+    "/api/v1/forms": {
+      "get": {
+        "tags": [
+          "Forms"
+        ],
+        "operationId": "listForms",
+        "summary": "Every form with its answers this week and where they went",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "viewer",
+        "description": "Needs the viewer role."
+      }
+    },
+    "/api/v1/forms/{id}": {
+      "get": {
+        "tags": [
+          "Forms"
+        ],
+        "operationId": "getForm",
+        "summary": "A form as the file sets it, with how to embed it",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The form's id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "description": "en, tr or de, of the languages the form is written in.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "viewer",
+        "description": "Needs the viewer role."
+      }
+    },
+    "/api/v1/forms/{id}/responses": {
+      "get": {
+        "tags": [
+          "Forms"
+        ],
+        "operationId": "listResponses",
+        "summary": "A form's answers, newest first",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The form's id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "submitted (default), partial, spam or all.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "submitted",
+                "partial",
+                "spam",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "From this day, YYYY-MM-DD in the file's time_zone.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "description": "Up to and including this day.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "Text in the person's email, name, company or any answer.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "nps",
+            "in": "query",
+            "required": false,
+            "description": "promoters, passives or detractors.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "promoters",
+                "passives",
+                "detractors"
+              ]
+            }
+          },
+          {
+            "name": "consent",
+            "in": "query",
+            "required": false,
+            "description": "yes: a consent box ticked; no: none.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "yes",
+                "no"
+              ]
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "description": "utm_source of the page it was sent from, or none.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "answer.{field}",
+            "in": "query",
+            "required": false,
+            "description": "Answers where this field has this value, such as answer.size=51-200; repeat for more. yes or no for yes/no fields.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "1 to 200; 50 by default.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "nextCursor of the page before.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "viewer",
+        "description": "Needs the viewer role."
+      }
+    },
+    "/api/v1/forms/{id}/export": {
+      "get": {
+        "tags": [
+          "Forms"
+        ],
+        "operationId": "exportResponses",
+        "summary": "A form's answers as CSV",
+        "description": "The same filters as the list. A value a spreadsheet would run as a formula starts with an apostrophe.\n\nNeeds the viewer role.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The form's id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "submitted (default), partial, spam or all.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "submitted",
+                "partial",
+                "spam",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "From this day, YYYY-MM-DD in the file's time_zone.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "description": "Up to and including this day.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "Text in the person's email, name, company or any answer.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "nps",
+            "in": "query",
+            "required": false,
+            "description": "promoters, passives or detractors.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "promoters",
+                "passives",
+                "detractors"
+              ]
+            }
+          },
+          {
+            "name": "consent",
+            "in": "query",
+            "required": false,
+            "description": "yes: a consent box ticked; no: none.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "yes",
+                "no"
+              ]
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "description": "utm_source of the page it was sent from, or none.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "answer.{field}",
+            "in": "query",
+            "required": false,
+            "description": "Answers where this field has this value, such as answer.size=51-200; repeat for more. yes or no for yes/no fields.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV with a byte order mark.",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/forms/{id}/report": {
+      "get": {
+        "tags": [
+          "Forms"
+        ],
+        "operationId": "report",
+        "summary": "Each question summed up, where people left, NPS by week",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The form's id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "From this day, YYYY-MM-DD in the file's time_zone.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "description": "Up to and including this day.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "viewer",
+        "description": "Needs the viewer role."
+      }
+    },
+    "/api/v1/responses/{id}": {
+      "get": {
+        "operationId": "getResponse",
+        "tags": [
+          "Answers"
+        ],
+        "summary": "One answer, and where it went",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The answer's id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "viewer",
+        "description": "Needs the viewer role."
+      },
+      "delete": {
+        "operationId": "deleteResponse",
+        "tags": [
+          "Answers"
+        ],
+        "summary": "Delete an answer and its files",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The answer's id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "editor",
+        "description": "Needs the editor role."
+      }
+    },
+    "/api/v1/responses/{id}/spam": {
+      "post": {
+        "operationId": "markSpam",
+        "tags": [
+          "Answers"
+        ],
+        "summary": "Mark an answer as spam",
+        "description": "What has not been sent yet is not sent.\n\nNeeds the editor role.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The answer's id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "editor"
+      }
+    },
+    "/api/v1/responses/{id}/not-spam": {
+      "post": {
+        "operationId": "markNotSpam",
+        "tags": [
+          "Answers"
+        ],
+        "summary": "Take an answer out of spam",
+        "description": "It is sent where its form says, as if it had just come.\n\nNeeds the editor role.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The answer's id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "editor"
+      }
+    },
+    "/api/v1/responses/{id}/retry": {
+      "post": {
+        "operationId": "retry",
+        "tags": [
+          "Answers"
+        ],
+        "summary": "Send what failed again",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The answer's id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "editor",
+        "description": "Needs the editor role."
+      }
+    },
+    "/api/v1/files/{id}": {
+      "get": {
+        "operationId": "getFile",
+        "tags": [
+          "Answers"
+        ],
+        "summary": "A file someone attached",
+        "description": "PNG, JPEG, GIF and WebP are shown; anything else is downloaded. Served with a sandboxing Content-Security-Policy.\n\nNeeds the viewer role.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The file's id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The file.",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/erasures": {
+      "post": {
+        "operationId": "erase",
+        "tags": [
+          "Contracts"
+        ],
+        "summary": "Delete a person on request, as Audience asks",
+        "description": "Every answer, sent or not, whose person has one of the emails, phone numbers (by their digits) or user ids goes, with its files and what was waiting to be sent. The same reference answers the same again.\n\nNeeds the admin role.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErasureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErasureAnswer"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "x-openasy-role": "admin"
+      }
+    },
+    "/api/v1/public/forms/{id}": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "operationId": "publicForm",
+        "summary": "A form, as a page draws it",
+        "description": "From the form's own page, from a page on one of the form's embed origins (CORS), or from a server (no Origin). Comes with a fresh token. The language is lang, else the browser's, among those the form is written in.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The form's id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "description": "en, tr or de.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicForm"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/v1/public/forms/{id}/responses": {
+      "post": {
+        "tags": [
+          "Public"
+        ],
+        "operationId": "submit",
+        "summary": "Send an answer",
+        "description": "Checked as the form's pages and show_if say. The same token sends one answer: sending it again answers 200 with the same id. An answer the spam filters take for a bot's is answered the same way and kept as spam.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The form's id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Submission"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "This token's answer, taken before.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Submitted"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Taken.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Submitted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/v1/public/forms/{id}/progress": {
+      "post": {
+        "tags": [
+          "Public"
+        ],
+        "operationId": "progress",
+        "summary": "Say how far a page got",
+        "description": "Kept as the form's partials setting says: nothing (off), the pages reached and fields answered (progress), or the answers so far (answers).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The form's id.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Progress"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Noted."
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/v1/public/forms/{id}/files": {
+      "post": {
+        "tags": [
+          "Public"
+        ],
+        "operationId": "upload",
+        "summary": "Attach a file to a file field",
+        "description": "The body is the file; x-file-name its name, URI-encoded. Its bytes must be one of the field's types. Send its id as the field's answer.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The form's id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "field",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUploaded"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "415": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": []
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "healthz",
+        "tags": [
+          "Product"
+        ],
+        "summary": "Alive",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "readyz",
+        "tags": [
+          "Product"
+        ],
+        "summary": "Ready",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not ready.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/metrics": {
+      "get": {
+        "operationId": "metrics",
+        "tags": [
+          "Product"
+        ],
+        "summary": "Prometheus metrics",
+        "responses": {
+          "200": {
+            "description": "Metrics.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "webhooks": {
+    "responseSubmitted": {
+      "post": {
+        "operationId": "responseSubmitted",
+        "summary": "An answer was sent, to a webhook in the file",
+        "description": "Signed as Standard Webhooks (standardwebhooks.com) signs: webhook-signature is v1,<base64 HMAC-SHA256 of \"<webhook-id>.<webhook-timestamp>.<body>\">, keyed with the secret the file names (a whsec_<base64> secret is used as those bytes). Reject a timestamp more than 5 minutes off. Answer 2xx; anything else is tried again after 1, 2, 4 minutes and so on, for three days, and a 4xx but 408 and 429 is not tried again.",
+        "parameters": [
+          {
+            "name": "webhook-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhook-timestamp",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "webhook-signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Taken."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "openasy_session"
+      },
+      "apiToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "An API token made under Settings, API tokens."
+      },
+      "adminToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Tests only."
+      }
+    },
+    "responses": {
+      "Problem": {
+        "description": "A problem (RFC 9457).",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Problem": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string",
+            "description": "Stable; match on this.",
+            "enum": [
+              "invalid-token",
+              "invalid-json",
+              "invalid-body",
+              "invalid-answers",
+              "forbidden",
+              "forbidden-origin",
+              "not-found",
+              "conflict",
+              "closed",
+              "expired",
+              "proof-of-work",
+              "captcha-failed",
+              "unsupported-file",
+              "rate-limited",
+              "payload-too-large",
+              "internal-error",
+              "unauthenticated",
+              "invalid-credentials",
+              "mfa-required",
+              "mfa-setup-required",
+              "cross-site"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          },
+          "errors": {
+            "description": "For invalid-answers: each field and what is wrong with it.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "field",
+                "code",
+                "message"
+              ],
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string",
+                  "enum": [
+                    "required",
+                    "too_short",
+                    "too_long",
+                    "too_small",
+                    "too_large",
+                    "pattern",
+                    "email",
+                    "phone",
+                    "url",
+                    "date",
+                    "number",
+                    "option",
+                    "too_few",
+                    "too_many",
+                    "file"
+                  ]
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Status": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "Version": {
+        "type": "object",
+        "required": [
+          "product",
+          "version"
+        ],
+        "properties": {
+          "product": {
+            "const": "forms"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "ProductList": {
+        "type": "object",
+        "required": [
+          "products"
+        ],
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "url"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Summary": {
+        "type": "object",
+        "required": [
+          "forms",
+          "week",
+          "failed",
+          "waiting",
+          "file"
+        ],
+        "properties": {
+          "forms": {
+            "type": "integer"
+          },
+          "week": {
+            "type": "integer"
+          },
+          "failed": {
+            "type": "integer"
+          },
+          "waiting": {
+            "type": "integer"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "Settings": {
+        "type": "object",
+        "required": [
+          "file",
+          "yaml",
+          "config"
+        ],
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "yaml": {
+            "type": "string"
+          },
+          "config": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "Integrations": {
+        "type": "object",
+        "required": [
+          "links",
+          "webhooks",
+          "analytics",
+          "captcha"
+        ],
+        "properties": {
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "linked",
+                "url",
+                "secret",
+                "secretSet",
+                "waiting",
+                "failed",
+                "lastSentAt",
+                "lastError"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "enum": [
+                    "consent",
+                    "audience",
+                    "crm",
+                    "helpdesk",
+                    "mail",
+                    "webhook"
+                  ]
+                },
+                "linked": {
+                  "type": "boolean"
+                },
+                "url": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "secret": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "The environment variable the file names, never its value."
+                },
+                "secretSet": {
+                  "type": "boolean"
+                },
+                "waiting": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "lastSentAt": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "lastError": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "purposes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "version"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "version": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "error": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "webhooks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "url",
+                "secret",
+                "secretSet",
+                "waiting",
+                "failed",
+                "lastSentAt",
+                "lastError"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "secret": {
+                  "type": "string"
+                },
+                "secretSet": {
+                  "type": "boolean"
+                },
+                "waiting": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "lastSentAt": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "lastError": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "analytics": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "captcha": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "provider",
+                  "siteKey",
+                  "secret",
+                  "secretSet"
+                ],
+                "properties": {
+                  "provider": {
+                    "type": "string"
+                  },
+                  "siteKey": {
+                    "type": "string"
+                  },
+                  "secret": {
+                    "type": "string"
+                  },
+                  "secretSet": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "Condition": {
+        "description": "One test on an earlier answer; any holds when one of its own does.",
+        "anyOf": [
+          {
+            "type": "object",
+            "required": [
+              "field"
+            ],
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "is": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "not": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "in": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "answered": {
+                "type": "boolean"
+              },
+              "above": {
+                "type": "number"
+              },
+              "below": {
+                "type": "number"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "any"
+            ],
+            "properties": {
+              "any": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Condition"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PublicField": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "label",
+          "help",
+          "placeholder",
+          "required",
+          "min",
+          "max",
+          "pattern",
+          "patternMessage",
+          "options",
+          "minLabel",
+          "maxLabel",
+          "accept",
+          "maxSize",
+          "consent",
+          "showIf"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "textarea",
+              "email",
+              "phone",
+              "number",
+              "url",
+              "date",
+              "choice",
+              "choices",
+              "select",
+              "yes_no",
+              "rating",
+              "scale",
+              "nps",
+              "file",
+              "consent",
+              "statement"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "description": "The question; for a consent box, the text of the purpose's version in Consent."
+          },
+          "help": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "placeholder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pattern": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "patternMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "value",
+                "label"
+              ],
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "minLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maxLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "accept": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "File fields: the MIME types taken."
+          },
+          "maxSize": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "consent": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "purpose",
+                  "channels",
+                  "version"
+                ],
+                "properties": {
+                  "purpose": {
+                    "type": "string"
+                  },
+                  "channels": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "version": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The version of the text shown, null until Forms has read it from Consent."
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "showIf": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            }
+          }
+        }
+      },
+      "PublicPage": {
+        "type": "object",
+        "required": [
+          "title",
+          "description",
+          "showIf",
+          "fields"
+        ],
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "showIf": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            }
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicField"
+            }
+          }
+        }
+      },
+      "PublicForm": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "language",
+          "title",
+          "description",
+          "pages",
+          "hidden",
+          "submit",
+          "thanks",
+          "redirect",
+          "closed",
+          "closedText",
+          "token",
+          "spam",
+          "partials",
+          "endpoint"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "lead",
+              "contact",
+              "nps",
+              "survey"
+            ]
+          },
+          "language": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicPage"
+            }
+          },
+          "hidden": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Answers filled from the page's address or the tag's data-value-<field> attributes."
+          },
+          "submit": {
+            "type": "string"
+          },
+          "thanks": {
+            "type": "string"
+          },
+          "redirect": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "closed": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "closed",
+                  "full"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "closedText": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "token": {
+            "type": "string",
+            "description": "Sent back with the answer: it times it, and one token makes one answer."
+          },
+          "spam": {
+            "type": "object",
+            "required": [
+              "honeypot",
+              "proofOfWork",
+              "captcha"
+            ],
+            "properties": {
+              "honeypot": {
+                "type": "string",
+                "description": "The name of the field people never see; send it empty."
+              },
+              "proofOfWork": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Zero bits sha256(token:proof) must start with; null for none."
+              },
+              "captcha": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "provider",
+                      "siteKey"
+                    ],
+                    "properties": {
+                      "provider": {
+                        "type": "string",
+                        "enum": [
+                          "turnstile",
+                          "hcaptcha"
+                        ]
+                      },
+                      "siteKey": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "partials": {
+            "type": "string",
+            "enum": [
+              "off",
+              "progress",
+              "answers"
+            ]
+          },
+          "endpoint": {
+            "type": "string"
+          }
+        }
+      },
+      "Route": {
+        "type": "object",
+        "required": [
+          "target",
+          "name",
+          "sent",
+          "waiting",
+          "failed"
+        ],
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "consent",
+              "audience",
+              "crm",
+              "helpdesk",
+              "mail",
+              "webhook"
+            ]
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sent": {
+            "type": "integer"
+          },
+          "waiting": {
+            "type": "integer"
+          },
+          "failed": {
+            "type": "integer"
+          }
+        }
+      },
+      "FormSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "title",
+          "state",
+          "closes",
+          "limit",
+          "pages",
+          "fields",
+          "languages",
+          "week",
+          "total",
+          "lastAt",
+          "nps",
+          "file",
+          "embedOn",
+          "destinations",
+          "url"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "lead",
+              "contact",
+              "nps",
+              "survey"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed",
+              "full"
+            ]
+          },
+          "closes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pages": {
+            "type": "integer"
+          },
+          "fields": {
+            "type": "integer"
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "week": {
+            "type": "object",
+            "required": [
+              "views",
+              "submitted",
+              "partial",
+              "leads",
+              "consent",
+              "spam",
+              "completion"
+            ],
+            "properties": {
+              "views": {
+                "type": "integer",
+                "description": "Times the form was shown, in the last 7 days."
+              },
+              "submitted": {
+                "type": "integer"
+              },
+              "partial": {
+                "type": "integer"
+              },
+              "leads": {
+                "type": "integer",
+                "description": "Answers that opened a lead in CRM."
+              },
+              "consent": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Answers with a consent box ticked; null for a form without one."
+              },
+              "spam": {
+                "type": "integer"
+              },
+              "completion": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "lastAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nps": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "score",
+                  "promoters",
+                  "passives",
+                  "detractors",
+                  "answers"
+                ],
+                "properties": {
+                  "score": {
+                    "type": "integer"
+                  },
+                  "promoters": {
+                    "type": "integer"
+                  },
+                  "passives": {
+                    "type": "integer"
+                  },
+                  "detractors": {
+                    "type": "integer"
+                  },
+                  "answers": {
+                    "type": "integer"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "file": {
+            "type": "string",
+            "description": "Where the form is written: forms.yaml, or forms/<id>.yaml."
+          },
+          "embedOn": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The hosts of the form's embed origins."
+          },
+          "destinations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Route"
+            },
+            "description": "Where its answers go, and how sending went in the last 7 days. Products not linked in the file are left out: the answers stay in Forms."
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "FormList": {
+        "type": "object",
+        "required": [
+          "forms"
+        ],
+        "properties": {
+          "forms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormSummary"
+            }
+          }
+        }
+      },
+      "FormDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FormSummary"
+          },
+          {
+            "type": "object",
+            "required": [
+              "language",
+              "description",
+              "definition",
+              "yaml",
+              "person",
+              "embed",
+              "spam",
+              "partials",
+              "sendTo"
+            ],
+            "properties": {
+              "language": {
+                "type": "string"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "definition": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "pages",
+                  "hidden"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "pages": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/PublicPage"
+                    }
+                  },
+                  "hidden": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "yaml": {
+                "type": "string",
+                "description": "The form as it is written in its file."
+              },
+              "person": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "phone",
+                  "name",
+                  "company",
+                  "userId"
+                ],
+                "properties": {
+                  "email": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "phone": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "company": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "userId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              "embed": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "script",
+                  "frame",
+                  "origins"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "script": {
+                    "type": "string"
+                  },
+                  "frame": {
+                    "type": "string"
+                  },
+                  "origins": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "spam": {
+                "type": "object",
+                "required": [
+                  "minSeconds",
+                  "rate",
+                  "proofOfWork",
+                  "captcha"
+                ],
+                "properties": {
+                  "minSeconds": {
+                    "type": "number"
+                  },
+                  "rate": {
+                    "type": "string"
+                  },
+                  "proofOfWork": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "captcha": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              "partials": {
+                "type": "string",
+                "enum": [
+                  "off",
+                  "progress",
+                  "answers"
+                ]
+              },
+              "sendTo": {
+                "type": "object",
+                "required": [
+                  "audience",
+                  "consent",
+                  "crm",
+                  "helpdesk",
+                  "notify",
+                  "webhooks",
+                  "traits"
+                ],
+                "properties": {
+                  "audience": {
+                    "type": "boolean"
+                  },
+                  "consent": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "field",
+                        "purpose",
+                        "channels",
+                        "linked",
+                        "version"
+                      ],
+                      "properties": {
+                        "field": {
+                          "type": "string"
+                        },
+                        "purpose": {
+                          "type": "string"
+                        },
+                        "channels": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "linked": {
+                          "type": "boolean"
+                        },
+                        "version": {
+                          "anyOf": [
+                            {
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "crm": {
+                    "anyOf": [
+                      {
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "helpdesk": {
+                    "anyOf": [
+                      {
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "notify": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "webhooks": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "traits": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "field",
+                        "trait"
+                      ],
+                      "properties": {
+                        "field": {
+                          "type": "string"
+                        },
+                        "trait": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ResponseSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "form",
+          "status",
+          "language",
+          "startedAt",
+          "updatedAt",
+          "submittedAt",
+          "page",
+          "pages",
+          "person",
+          "nps",
+          "spamReason",
+          "answered",
+          "preview",
+          "hidden",
+          "deliveries"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "form": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "partial",
+              "submitted",
+              "spam"
+            ]
+          },
+          "language": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "submittedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "page": {
+            "type": "integer",
+            "description": "The furthest page reached, from 0."
+          },
+          "pages": {
+            "type": "integer"
+          },
+          "person": {
+            "type": "object",
+            "required": [
+              "email",
+              "phone",
+              "name",
+              "company"
+            ],
+            "properties": {
+              "email": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "phone": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "company": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "nps": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "spamReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "honeypot, too_fast, or who marked it."
+          },
+          "answered": {
+            "type": "integer"
+          },
+          "preview": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "field",
+                "label",
+                "text"
+              ],
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "hidden": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "deliveries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "target",
+                "name",
+                "state"
+              ],
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "enum": [
+                    "consent",
+                    "audience",
+                    "crm",
+                    "helpdesk",
+                    "mail",
+                    "webhook"
+                  ]
+                },
+                "name": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "state": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ResponseList": {
+        "type": "object",
+        "required": [
+          "responses",
+          "total",
+          "facets"
+        ],
+        "properties": {
+          "responses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponseSummary"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "facets": {
+            "type": "object",
+            "required": [
+              "consent",
+              "sources"
+            ],
+            "properties": {
+              "consent": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "yes",
+                      "no"
+                    ],
+                    "properties": {
+                      "yes": {
+                        "type": "integer"
+                      },
+                      "no": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Answers of the status with a consent box ticked, and not; null for a form without one."
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "value",
+                    "count"
+                  ],
+                  "properties": {
+                    "value": {
+                      "type": "string",
+                      "description": "utm_source, or none."
+                    },
+                    "count": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Delivery": {
+        "type": "object",
+        "required": [
+          "id",
+          "target",
+          "name",
+          "state",
+          "attempts",
+          "error",
+          "result",
+          "nextAt",
+          "createdAt",
+          "doneAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "consent",
+              "audience",
+              "crm",
+              "helpdesk",
+              "mail",
+              "webhook"
+            ]
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The webhook's id."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "sent",
+              "failed"
+            ]
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the product answered: CRM's deal and its address, Helpdesk's ticket, Audience's profile, Consent's person."
+          },
+          "nextAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "doneAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "ResponseDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ResponseSummary"
+          },
+          {
+            "type": "object",
+            "required": [
+              "formName",
+              "answers",
+              "answeredFields",
+              "shownPages",
+              "meta",
+              "deliveries"
+            ],
+            "properties": {
+              "formName": {
+                "type": "string"
+              },
+              "answers": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "field",
+                        "label",
+                        "type",
+                        "value",
+                        "text"
+                      ],
+                      "properties": {
+                        "field": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          ],
+                          "description": "Text, a number, yes or no (true, false), the options ticked, or a file's id."
+                        },
+                        "text": {
+                          "type": "string",
+                          "description": "As people read it: option labels, Yes or No, the file's name."
+                        },
+                        "file": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "name",
+                            "size",
+                            "type"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "size": {
+                              "type": "integer"
+                            },
+                            "type": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "null for a partial that keeps only how far it got."
+              },
+              "answeredFields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "shownPages": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "meta": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "referrer",
+                  "utm",
+                  "origin"
+                ],
+                "properties": {
+                  "url": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "referrer": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "utm": {
+                    "anyOf": [
+                      {
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "origin": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              "deliveries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Delivery"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "Question": {
+        "type": "object",
+        "required": [
+          "field",
+          "label",
+          "type",
+          "answers",
+          "shown"
+        ],
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "answers": {
+            "type": "integer"
+          },
+          "shown": {
+            "type": "integer",
+            "description": "Answers sent whose pages showed the question."
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "value",
+                "label",
+                "count"
+              ],
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scale": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "value",
+                "count"
+              ],
+              "properties": {
+                "value": {
+                  "type": "integer"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "nps": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "score",
+                  "promoters",
+                  "passives",
+                  "detractors",
+                  "answers"
+                ],
+                "properties": {
+                  "score": {
+                    "type": "integer"
+                  },
+                  "promoters": {
+                    "type": "integer"
+                  },
+                  "passives": {
+                    "type": "integer"
+                  },
+                  "detractors": {
+                    "type": "integer"
+                  },
+                  "answers": {
+                    "type": "integer"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ticked": {
+            "type": "integer"
+          },
+          "latest": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "response",
+                "text",
+                "at"
+              ],
+              "properties": {
+                "response": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Report": {
+        "type": "object",
+        "required": [
+          "form",
+          "views",
+          "started",
+          "submitted",
+          "partial",
+          "completion",
+          "medianSeconds",
+          "nps",
+          "npsWeeks",
+          "npsMonths",
+          "reasons",
+          "sources",
+          "days",
+          "questions",
+          "pages",
+          "fields"
+        ],
+        "properties": {
+          "form": {
+            "type": "string"
+          },
+          "views": {
+            "type": "integer",
+            "description": "Times the form was shown in the days asked."
+          },
+          "started": {
+            "type": "integer"
+          },
+          "submitted": {
+            "type": "integer"
+          },
+          "partial": {
+            "type": "integer"
+          },
+          "completion": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "medianSeconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nps": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "score",
+                  "promoters",
+                  "passives",
+                  "detractors",
+                  "answers"
+                ],
+                "properties": {
+                  "score": {
+                    "type": "integer"
+                  },
+                  "promoters": {
+                    "type": "integer"
+                  },
+                  "passives": {
+                    "type": "integer"
+                  },
+                  "detractors": {
+                    "type": "integer"
+                  },
+                  "answers": {
+                    "type": "integer"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "npsWeeks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "week",
+                "score",
+                "promoters",
+                "passives",
+                "detractors",
+                "answers"
+              ],
+              "properties": {
+                "week": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "integer"
+                },
+                "promoters": {
+                  "type": "integer"
+                },
+                "passives": {
+                  "type": "integer"
+                },
+                "detractors": {
+                  "type": "integer"
+                },
+                "answers": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "npsMonths": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "month",
+                "score",
+                "promoters",
+                "passives",
+                "detractors",
+                "answers"
+              ],
+              "properties": {
+                "month": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "integer"
+                },
+                "promoters": {
+                  "type": "integer"
+                },
+                "passives": {
+                  "type": "integer"
+                },
+                "detractors": {
+                  "type": "integer"
+                },
+                "answers": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "response",
+                "score",
+                "text",
+                "name",
+                "at"
+              ],
+              "properties": {
+                "response": {
+                  "type": "string"
+                },
+                "score": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "text": {
+                  "type": "string"
+                },
+                "name": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "description": "The latest answers to the first text question after the NPS score."
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "value",
+                "count"
+              ],
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "day",
+                "answers"
+              ],
+              "properties": {
+                "day": {
+                  "type": "string"
+                },
+                "answers": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            }
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "page",
+                "title",
+                "reached",
+                "left"
+              ],
+              "properties": {
+                "page": {
+                  "type": "integer"
+                },
+                "title": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "reached": {
+                  "type": "integer"
+                },
+                "left": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "field",
+                "label",
+                "page",
+                "reached",
+                "answered"
+              ],
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "page": {
+                  "type": "integer"
+                },
+                "reached": {
+                  "type": "integer"
+                },
+                "answered": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Submission": {
+        "type": "object",
+        "required": [
+          "token",
+          "answers"
+        ],
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "answers": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "Text, a number, yes or no (true, false), the options ticked, or a file's id."
+            },
+            "description": "By field id; hidden fields too."
+          },
+          "language": {
+            "type": "string"
+          },
+          "page": {
+            "type": "object",
+            "required": [],
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "referrer": {
+                "type": "string"
+              }
+            }
+          },
+          "website": {
+            "type": "string",
+            "description": "The honeypot: leave it empty."
+          },
+          "proof": {
+            "type": "string",
+            "description": "The proof of work's number, when the form asks for one."
+          },
+          "captcha": {
+            "type": "string",
+            "description": "The captcha's answer, when the form asks for one."
+          },
+          "versions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "The version of each consent box's text the page showed."
+          }
+        },
+        "additionalProperties": false
+      },
+      "Submitted": {
+        "type": "object",
+        "required": [
+          "response",
+          "thanks",
+          "redirect"
+        ],
+        "properties": {
+          "response": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            }
+          },
+          "thanks": {
+            "type": "string"
+          },
+          "redirect": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "Progress": {
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "language": {
+            "type": "string"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "answered": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "With partials: progress, the fields answered, without what was written."
+          },
+          "answers": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "Text, a number, yes or no (true, false), the options ticked, or a file's id."
+            },
+            "description": "With partials: answers, what was written so far."
+          }
+        },
+        "additionalProperties": false
+      },
+      "FileUploaded": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "size",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "ErasureRequest": {
+        "type": "object",
+        "required": [
+          "reference",
+          "product",
+          "people"
+        ],
+        "properties": {
+          "reference": {
+            "type": "string"
+          },
+          "product": {
+            "const": "audience"
+          },
+          "people": {
+            "type": "object",
+            "required": [
+              "emails",
+              "phones",
+              "userIds"
+            ],
+            "properties": {
+              "emails": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "phones": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "userIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErasureAnswer": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "done",
+              "waiting"
+            ]
+          },
+          "deleted": {
+            "type": "integer"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "WebhookEvent": {
+        "type": "object",
+        "required": [
+          "type",
+          "timestamp",
+          "data"
+        ],
+        "properties": {
+          "type": {
+            "const": "response.submitted"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "id",
+              "form",
+              "submittedAt",
+              "language",
+              "answers",
+              "fields",
+              "person",
+              "page",
+              "files",
+              "url"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "form": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name",
+                  "kind"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string"
+                  }
+                }
+              },
+              "submittedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "language": {
+                "type": "string"
+              },
+              "answers": {
+                "type": "object",
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ],
+                  "description": "Text, a number, yes or no (true, false), the options ticked, or a file's id."
+                }
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "label",
+                    "value",
+                    "text"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      ],
+                      "description": "Text, a number, yes or no (true, false), the options ticked, or a file's id."
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "person": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "phone",
+                  "name",
+                  "company"
+                ],
+                "properties": {
+                  "email": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "phone": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "company": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              "page": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "referrer",
+                  "utm"
+                ],
+                "properties": {
+                  "url": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "referrer": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "utm": {
+                    "anyOf": [
+                      {
+                        "type": "object"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "field",
+                    "name",
+                    "type",
+                    "size",
+                    "url"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "field": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "url": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

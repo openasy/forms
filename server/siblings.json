@@ -1,0 +1,1715 @@
+{
+  "audience": {
+    "version": "0.1.0",
+    "operations": {
+      "POST /api/v1/events": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Each event's person and whether it was new.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "POST webhooks:erasure": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErasureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErasureAnswer"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Kept for now; detail says why.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErasureAnswer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "EventBatch": {
+          "type": "object",
+          "required": [
+            "events"
+          ],
+          "properties": {
+            "events": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "items": {
+                "$ref": "#/components/schemas/EventInput"
+              }
+            }
+          }
+        },
+        "EventInput": {
+          "type": "object",
+          "required": [
+            "type",
+            "person"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "api",
+                "forms",
+                "crm",
+                "messages"
+              ],
+              "default": "api",
+              "description": "forms, crm and messages only once linked under sources in the file."
+            },
+            "type": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9_.:-]{0,63}$",
+              "description": "What happened, such as form_submitted, deal_opened or message_opened."
+            },
+            "at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When it happened; now by default. At most a day ahead."
+            },
+            "id": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "The source's own id for the event: the same id from the same source is kept once."
+            },
+            "person": {
+              "$ref": "#/components/schemas/PersonInput"
+            },
+            "traits": {
+              "type": "object",
+              "description": "Traits to set as of at; null removes one. Traits the file does not declare, or does not take from this source, are left out and listed in ignoredTraits."
+            },
+            "properties": {
+              "type": "object",
+              "description": "Up to 4096 bytes of JSON. Segments compare its top-level values."
+            },
+            "text": {
+              "type": "string",
+              "maxLength": 300,
+              "description": "How the timeline says it."
+            }
+          }
+        },
+        "PersonInput": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "At least one of the identifiers the file matches by. Emails are lowercased, phone numbers written as +905551112233.",
+          "properties": {
+            "email": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "phone": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "userId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "IngestResult": {
+          "type": "object",
+          "required": [
+            "recorded",
+            "duplicates",
+            "results"
+          ],
+          "properties": {
+            "recorded": {
+              "type": "integer"
+            },
+            "duplicates": {
+              "type": "integer"
+            },
+            "results": {
+              "type": "array",
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Resolved"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "event",
+                      "duplicate",
+                      "ignoredTraits"
+                    ],
+                    "properties": {
+                      "event": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
+                      },
+                      "duplicate": {
+                        "type": "boolean"
+                      },
+                      "ignoredTraits": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/IgnoredTrait"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "Resolved": {
+          "type": "object",
+          "required": [
+            "profile",
+            "created",
+            "merged",
+            "conflicts"
+          ],
+          "properties": {
+            "profile": {
+              "type": "string",
+              "description": "The person's profile id now."
+            },
+            "created": {
+              "type": "boolean"
+            },
+            "merged": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Profiles joined into it: they shared an email, a phone number or the user id."
+            },
+            "conflicts": {
+              "type": "integer",
+              "description": "Identifiers given that belong to someone with another user id, so they were not added."
+            }
+          }
+        },
+        "IgnoredTrait": {
+          "type": "object",
+          "required": [
+            "trait",
+            "reason"
+          ],
+          "properties": {
+            "trait": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        "Problem": {
+          "type": "object",
+          "required": [
+            "type",
+            "title",
+            "status",
+            "code"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "format": "uri"
+            },
+            "title": {
+              "type": "string"
+            },
+            "status": {
+              "type": "integer"
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "invalid-json",
+                "invalid-body",
+                "not-found",
+                "conflict",
+                "not-configured",
+                "payload-too-large",
+                "upstream-error",
+                "internal-error",
+                "unauthenticated",
+                "invalid-credentials",
+                "invalid-token",
+                "mfa-required",
+                "mfa-setup-required",
+                "forbidden",
+                "cross-site",
+                "rate-limited"
+              ],
+              "description": "Stable; match on this."
+            },
+            "detail": {
+              "type": "string"
+            }
+          }
+        },
+        "ErasureRequest": {
+          "type": "object",
+          "required": [
+            "reference",
+            "product",
+            "people"
+          ],
+          "properties": {
+            "reference": {
+              "type": "string"
+            },
+            "product": {
+              "const": "audience"
+            },
+            "people": {
+              "type": "object",
+              "required": [
+                "emails",
+                "phones",
+                "userIds"
+              ],
+              "properties": {
+                "emails": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "phones": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "userIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ErasureAnswer": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "done",
+                "waiting"
+              ]
+            },
+            "deleted": {
+              "type": "integer"
+            },
+            "detail": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "responses": {
+        "Problem": {
+          "description": "An error, as RFC 9457 Problem Details.",
+          "content": {
+            "application/problem+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Problem"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "consent": {
+    "version": "0.1.0",
+    "operations": {
+      "POST /api/v1/consents": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Recorded, with what each answer means now.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recorded"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "GET /api/v1/purposes": {
+        "responses": {
+          "200": {
+            "description": "As the file sets them, with how many agreed to each version.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurposeList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "RecordRequest": {
+          "type": "object",
+          "required": [
+            "person",
+            "answers"
+          ],
+          "properties": {
+            "person": {
+              "$ref": "#/components/schemas/Who"
+            },
+            "answers": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100,
+              "items": {
+                "$ref": "#/components/schemas/AnswerInput"
+              }
+            },
+            "source": {
+              "type": "string",
+              "enum": [
+                "api",
+                "form",
+                "import"
+              ],
+              "default": "api"
+            },
+            "via": {
+              "type": "string",
+              "maxLength": 128,
+              "description": "Where the answers came from, such as forms/newsletter."
+            }
+          }
+        },
+        "Who": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "description": "One or more ways the person is known. Emails are lowercased, phone numbers written as +905551112233.",
+          "properties": {
+            "email": {
+              "type": "string"
+            },
+            "phone": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "browser": {
+              "type": "string"
+            },
+            "person": {
+              "type": "string"
+            }
+          }
+        },
+        "AnswerInput": {
+          "type": "object",
+          "required": [
+            "purpose",
+            "channel",
+            "granted"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "purpose": {
+              "type": "string"
+            },
+            "channel": {
+              "type": "string",
+              "enum": [
+                "email",
+                "sms",
+                "call",
+                "web"
+              ]
+            },
+            "granted": {
+              "type": "boolean"
+            },
+            "version": {
+              "type": "integer",
+              "description": "The version of the text the person saw; by default the one in force at `at`."
+            },
+            "at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When they answered; now by default. Never in the future."
+            },
+            "iysSource": {
+              "type": "string",
+              "description": "Where İYS is told it was given, such as HS_CAGRI_MERKEZI; the file's iys.source by default."
+            },
+            "proof": {
+              "type": "string",
+              "maxLength": 500,
+              "description": "What shows the answer was given: a form's name, a call's reference."
+            }
+          }
+        },
+        "Recorded": {
+          "type": "object",
+          "required": [
+            "person",
+            "answers",
+            "standing"
+          ],
+          "properties": {
+            "person": {
+              "type": "string"
+            },
+            "answers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Answer"
+              }
+            },
+            "standing": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Standing"
+              }
+            }
+          }
+        },
+        "Answer": {
+          "type": "object",
+          "required": [
+            "id",
+            "person",
+            "purpose",
+            "channel",
+            "version",
+            "granted",
+            "at",
+            "recordedAt",
+            "source",
+            "via",
+            "actor",
+            "iysSource",
+            "proof"
+          ],
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "person": {
+              "type": "string"
+            },
+            "purpose": {
+              "type": "string"
+            },
+            "channel": {
+              "type": "string",
+              "enum": [
+                "email",
+                "sms",
+                "call",
+                "web"
+              ]
+            },
+            "version": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "granted": {
+              "type": "boolean"
+            },
+            "at": {
+              "type": "string"
+            },
+            "recordedAt": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string",
+              "enum": [
+                "banner",
+                "preferences",
+                "api",
+                "form",
+                "import",
+                "iys"
+              ]
+            },
+            "via": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "actor": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Who recorded it: a member's email or token:<name>."
+            },
+            "iysSource": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "proof": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "Standing": {
+          "type": "object",
+          "required": [
+            "purpose",
+            "channel",
+            "status",
+            "allowed",
+            "version",
+            "current",
+            "at",
+            "source"
+          ],
+          "properties": {
+            "purpose": {
+              "type": "string"
+            },
+            "channel": {
+              "type": "string",
+              "enum": [
+                "email",
+                "sms",
+                "call",
+                "web"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "granted",
+                "withdrawn",
+                "renew",
+                "none"
+              ],
+              "description": "granted: the latest answer is yes; withdrawn: no; renew: yes, to a text the file has since asked again for; none: never answered."
+            },
+            "allowed": {
+              "type": "boolean",
+              "description": "Whether the person may be reached on this channel for this purpose now."
+            },
+            "version": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "current": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "at": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "source": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "Problem": {
+          "type": "object",
+          "required": [
+            "type",
+            "title",
+            "status",
+            "code"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "format": "uri"
+            },
+            "title": {
+              "type": "string"
+            },
+            "status": {
+              "type": "integer"
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "invalid-token",
+                "invalid-json",
+                "invalid-body",
+                "forbidden-origin",
+                "not-found",
+                "conflict",
+                "not-configured",
+                "rate-limited",
+                "payload-too-large",
+                "upstream-error",
+                "internal-error",
+                "unauthenticated",
+                "invalid-credentials",
+                "mfa-required",
+                "mfa-setup-required",
+                "forbidden",
+                "cross-site"
+              ],
+              "description": "Stable; match on this."
+            },
+            "detail": {
+              "type": "string"
+            }
+          }
+        },
+        "PurposeList": {
+          "type": "object",
+          "required": [
+            "purposes",
+            "file"
+          ],
+          "properties": {
+            "purposes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Purpose"
+              }
+            },
+            "file": {
+              "$ref": "#/components/schemas/ConfigFile"
+            }
+          }
+        },
+        "Purpose": {
+          "type": "object",
+          "required": [
+            "id",
+            "name",
+            "channels",
+            "required",
+            "iys",
+            "current",
+            "versions",
+            "byChannel",
+            "sites"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "properties": {
+                    "en": {
+                      "type": "string"
+                    },
+                    "tr": {
+                      "type": "string"
+                    },
+                    "de": {
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "channels": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "email",
+                  "sms",
+                  "call",
+                  "web"
+                ]
+              }
+            },
+            "required": {
+              "type": "boolean"
+            },
+            "iys": {
+              "type": "boolean",
+              "description": "Answers on its email, SMS and call channels are kept in step with İYS."
+            },
+            "current": {
+              "type": "integer",
+              "description": "The version people are asked now."
+            },
+            "versions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "version",
+                  "text",
+                  "from",
+                  "renew",
+                  "granted"
+                ],
+                "properties": {
+                  "version": {
+                    "type": "integer"
+                  },
+                  "text": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "string"
+                        },
+                        "properties": {
+                          "en": {
+                            "type": "string"
+                          },
+                          "tr": {
+                            "type": "string"
+                          },
+                          "de": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "from": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "When it came into force: from in the file, or the day it was first applied."
+                  },
+                  "renew": {
+                    "type": "boolean"
+                  },
+                  "granted": {
+                    "type": "integer",
+                    "description": "People whose latest answer is yes to this version."
+                  }
+                }
+              }
+            },
+            "byChannel": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "channel",
+                  "granted",
+                  "renew",
+                  "withdrawn"
+                ],
+                "properties": {
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "email",
+                      "sms",
+                      "call",
+                      "web"
+                    ]
+                  },
+                  "granted": {
+                    "type": "integer"
+                  },
+                  "renew": {
+                    "type": "integer",
+                    "description": "Yes to a version the file has since asked again for."
+                  },
+                  "withdrawn": {
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "sites": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "ConfigFile": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "path",
+            "appliedAt",
+            "purposes",
+            "sites",
+            "error",
+            "warnings"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "appliedAt": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "purposes": {
+              "type": "integer"
+            },
+            "sites": {
+              "type": "integer"
+            },
+            "error": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "The file and whether it is applied; null before it was first read."
+        }
+      },
+      "responses": {
+        "Problem": {
+          "description": "An error, as RFC 9457 Problem Details.",
+          "content": {
+            "application/problem+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Problem"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "crm": {
+    "version": "0.1.0",
+    "operations": {
+      "POST /api/v1/leads": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The lead this external_id opened before.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadCreated"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "A new lead.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "LeadRequest": {
+          "type": "object",
+          "required": [
+            "external_id"
+          ],
+          "additionalProperties": false,
+          "description": "Live Chat sends exactly its CrmLeadRequest: external_id, source live-chat, name, email, page, title, owner, referrer, utm, pages, transcript and chat_url. Forms and your own systems may send phone, company, value and message too.",
+          "properties": {
+            "external_id": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "The same id opens one lead, however often it is sent."
+            },
+            "source": {
+              "type": "string",
+              "examples": [
+                "live-chat",
+                "forms",
+                "api"
+              ]
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "email": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "phone": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "company": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "page": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "The lead's deal name, up to 120 characters (the first line is kept)."
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "value": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "owner": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "referrer": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "utm": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [],
+                  "properties": {
+                    "source": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "medium": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "campaign": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "pages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [],
+                "properties": {
+                  "at": {
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "transcript": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [],
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "at": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "chat_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "message": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "LeadCreated": {
+          "type": "object",
+          "required": [
+            "lead"
+          ],
+          "properties": {
+            "lead": {
+              "type": "object",
+              "required": [
+                "id",
+                "url",
+                "contact",
+                "created"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The deal's id."
+                },
+                "url": {
+                  "type": "string"
+                },
+                "contact": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "created": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "Problem": {
+          "type": "object",
+          "required": [
+            "type",
+            "title",
+            "status",
+            "code"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "format": "uri"
+            },
+            "title": {
+              "type": "string"
+            },
+            "status": {
+              "type": "integer"
+            },
+            "code": {
+              "type": "string",
+              "description": "Stable; match on this.",
+              "enum": [
+                "invalid-token",
+                "invalid-json",
+                "invalid-body",
+                "forbidden",
+                "not-found",
+                "conflict",
+                "not-linked",
+                "not-available",
+                "link-failed",
+                "rate-limited",
+                "payload-too-large",
+                "internal-error",
+                "unauthenticated",
+                "invalid-credentials",
+                "mfa-required",
+                "mfa-setup-required",
+                "cross-site"
+              ]
+            },
+            "detail": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "responses": {
+        "Problem": {
+          "description": "A problem (RFC 9457).",
+          "content": {
+            "application/problem+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Problem"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "helpdesk": {
+    "version": "0.1.0",
+    "operations": {
+      "POST /api/v1/public/tickets": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicTicket"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicTicket"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The same external_id from the same source: the ticket it opened before.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicTicketCreated"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Opened. HTML forms get a thank-you page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicTicketCreated"
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Taken and dropped: the hidden website field was filled.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicTicketCreated"
+                }
+              }
+            }
+          },
+          "303": {
+            "description": "An HTML form with redirect: to that address."
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "PublicTicket": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "type": "string",
+              "description": "The source id from the settings file. With a key it may be left out: the key says which source it is."
+            },
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "The customer's address; replies go to it, and CRM is asked about it. Required for forms."
+            },
+            "name": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "subject": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "message": {
+              "type": "string",
+              "maxLength": 50000,
+              "description": "What the customer wrote. Required for forms without a transcript."
+            },
+            "form": {
+              "type": "string",
+              "maxLength": 64,
+              "description": "Which form, for routing rules with match.form."
+            },
+            "fields": {
+              "type": "object",
+              "maxProperties": 50,
+              "additionalProperties": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "description": "The form's other answers, shown with the message."
+            },
+            "language": {
+              "type": "string",
+              "maxLength": 10
+            },
+            "external_id": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "What Forms or Live Chat calls this request: the same id from the same source opens one ticket."
+            },
+            "transcript": {
+              "type": "array",
+              "maxItems": 500,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "enum": [
+                      "customer",
+                      "agent"
+                    ]
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "text": {
+                    "type": "string",
+                    "maxLength": 10000
+                  }
+                },
+                "required": [
+                  "from",
+                  "text"
+                ]
+              },
+              "description": "A chat's lines. Agents' lines need the source's key; with one, the first-reply clock is met."
+            },
+            "website": {
+              "type": "string",
+              "description": "Leave empty: a hidden field that only bots fill."
+            },
+            "redirect": {
+              "type": "string",
+              "format": "uri",
+              "description": "For HTML forms: where to send the browser after, on one of the source's origins; ?ticket=<number> is added."
+            }
+          }
+        },
+        "PublicTicketCreated": {
+          "type": "object",
+          "properties": {
+            "ticket": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "number": {
+                      "type": "integer"
+                    },
+                    "reference": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "$ref": "#/components/schemas/TicketStatus"
+                    }
+                  },
+                  "required": [
+                    "number",
+                    "reference",
+                    "status"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "created": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "ticket",
+            "created"
+          ],
+          "additionalProperties": false
+        },
+        "TicketStatus": {
+          "type": "string",
+          "enum": [
+            "open",
+            "waiting",
+            "solved",
+            "closed"
+          ]
+        },
+        "Problem": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "format": "uri"
+            },
+            "title": {
+              "type": "string"
+            },
+            "status": {
+              "type": "integer"
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "invalid-token",
+                "invalid-json",
+                "invalid-body",
+                "forbidden-origin",
+                "not-found",
+                "conflict",
+                "rate-limited",
+                "payload-too-large",
+                "unavailable",
+                "internal-error",
+                "unauthenticated",
+                "invalid-credentials",
+                "mfa-required",
+                "mfa-setup-required",
+                "forbidden",
+                "cross-site"
+              ],
+              "description": "Stable; match on this."
+            },
+            "detail": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "title",
+            "status",
+            "code"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "responses": {
+        "Problem": {
+          "description": "An error, as RFC 9457 Problem Details.",
+          "content": {
+            "application/problem+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Problem"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,46 @@
+# Forms. Forms, spam filters and the links to Consent, Audience, CRM and Helpdesk are in forms.yaml, and a form may
+# be a file of its own in config/forms/; answers are read in the UI.
+#
+#   openssl rand -hex 32 > openasy-kek   # the product's key: sign-in secrets (ADR 0021). Keep it with your backups
+#   docker compose up -d
+#   docker compose logs forms | grep 'no owner yet'   # the one-time link that creates the owner account
+services:
+  forms:
+    image: ghcr.io/openasy/forms:0.1.0
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: [/tmp]
+    ports:
+      - "127.0.0.1:8080:8080" # UI, API, the form pages and /embed.js; put a TLS proxy in front
+    volumes:
+      - forms-data:/data # SQLite database: answers, files people attached, what is waiting to be sent
+      - ./config:/config:ro # forms.yaml and the forms folder; mount the folder so an editor's save reaches it
+    secrets:
+      - openasy-kek # mounted at /run/secrets/openasy-kek
+    environment:
+      # The address people open Forms at; the form pages, the embed script and links in notifications use it.
+      FORMS_PUBLIC_URL: ${FORMS_PUBLIC_URL:-http://localhost:8080}
+      FORMS_CONFIG: /config/forms.yaml
+      # Behind a proxy that sets X-Forwarded-For, so rate limits see each visitor's address:
+      # FORMS_TRUST_PROXY: "true"
+      # The secrets forms.yaml names, never written in the file itself:
+      # FORMS_CONSENT_TOKEN: ${FORMS_CONSENT_TOKEN}     # a Consent token of the editor role
+      # FORMS_AUDIENCE_TOKEN: ${FORMS_AUDIENCE_TOKEN}   # an Audience token of the editor role
+      # FORMS_CRM_TOKEN: ${FORMS_CRM_TOKEN}             # a CRM token of the editor role
+      # FORMS_HELPDESK_KEY: ${FORMS_HELPDESK_KEY}       # the key of Helpdesk's forms source
+      # FORMS_WEBHOOK_SECRET: ${FORMS_WEBHOOK_SECRET}
+      # FORMS_MAIL_PASSWORD: ${FORMS_MAIL_PASSWORD}
+      # FORMS_CAPTCHA_SECRET: ${FORMS_CAPTCHA_SECRET}
+      # Sign in with your identity provider (OIDC), see the README:
+      # OPENASY_OIDC_ISSUER: https://login.example.com
+      # OPENASY_OIDC_CLIENT_ID: forms
+      # OPENASY_OIDC_CLIENT_SECRET: ${OPENASY_OIDC_CLIENT_SECRET}
+
+volumes:
+  forms-data:
+
+secrets:
+  openasy-kek:
+    file: ./openasy-kek
