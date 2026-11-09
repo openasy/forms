@@ -24,38 +24,53 @@ export function openDraft(yaml: string, id: string, file: string, lang: string):
   return { doc, base: file === "forms.yaml" ? ["forms", id] : [], id, file, lang };
 }
 
+// The starter questions are written in all three languages, so the form reads right whichever one a visitor uses.
 const KINDS: Record<Kind, Raw> = {
   lead: {
     kind: "lead",
     fields: [
-      { id: "name", type: "text", label: "Name", required: true },
-      { id: "email", type: "email", label: "Work email", required: true },
-      { id: "company", type: "text", label: "Company" },
-      { id: "message", type: "textarea", label: "Anything else?" },
+      { id: "name", type: "text", label: { en: "Name", tr: "Ad soyad", de: "Name" }, required: true },
+      { id: "email", type: "email", label: { en: "Work email", tr: "İş e-postası", de: "Geschäftliche E-Mail" }, required: true },
+      { id: "company", type: "text", label: { en: "Company", tr: "Şirket", de: "Unternehmen" } },
+      { id: "message", type: "textarea", label: { en: "Anything else?", tr: "Eklemek istediğiniz bir şey var mı?", de: "Sonst noch etwas?" } },
     ],
     send_to: { crm: true },
   },
   contact: {
     kind: "contact",
     fields: [
-      { id: "name", type: "text", label: "Name" },
-      { id: "email", type: "email", label: "Email", required: true },
-      { id: "message", type: "textarea", label: "Message", required: true },
+      { id: "name", type: "text", label: { en: "Name", tr: "Ad soyad", de: "Name" } },
+      { id: "email", type: "email", label: { en: "Email", tr: "E-posta", de: "E-Mail" }, required: true },
+      { id: "message", type: "textarea", label: { en: "Message", tr: "Mesaj", de: "Nachricht" }, required: true },
     ],
     send_to: { helpdesk: true },
   },
   nps: {
     kind: "nps",
     fields: [
-      { id: "score", type: "nps", label: "How likely are you to recommend us to a colleague?", required: true },
-      { id: "why", type: "textarea", label: "What should we do better?", show_if: { field: "score", below: 9 } },
+      {
+        id: "score",
+        type: "nps",
+        label: {
+          en: "How likely are you to recommend us to a colleague?",
+          tr: "Bizi bir iş arkadaşınıza önerme olasılığınız nedir?",
+          de: "Wie wahrscheinlich ist es, dass Sie uns einer Kollegin oder einem Kollegen empfehlen?",
+        },
+        required: true,
+      },
+      {
+        id: "why",
+        type: "textarea",
+        label: { en: "What should we do better?", tr: "Neyi daha iyi yapmalıyız?", de: "Was sollten wir besser machen?" },
+        show_if: { field: "score", below: 9 },
+      },
     ],
   },
   survey: {
     kind: "survey",
     fields: [
-      { id: "rating", type: "rating", label: "How was it?", required: true },
-      { id: "comment", type: "textarea", label: "Anything to add?" },
+      { id: "rating", type: "rating", label: { en: "How was it?", tr: "Nasıldı?", de: "Wie war es?" }, required: true },
+      { id: "comment", type: "textarea", label: { en: "Anything to add?", tr: "Eklemek istediğiniz bir şey var mı?", de: "Möchten Sie noch etwas ergänzen?" } },
     ],
   },
 };
