@@ -21,7 +21,7 @@ import { AnswersPage } from "./answers.tsx";
 import type { FormSummary, ProductLink, ResponseDetail, Settings, Summary } from "./api.ts";
 import { useApi, type Call } from "./common.tsx";
 import { FormPage, FormsPage } from "./forms.tsx";
-import { useT } from "./i18n.ts";
+import { useT, setViewerLocale } from "./i18n.ts";
 import { IntegrationsPage, SettingsFilePage } from "./pages.tsx";
 import { ResultsPage } from "./results.tsx";
 
@@ -219,6 +219,7 @@ export function App() {
   const installBrand = useInstallBrand();
   const [theme] = useThemePreference();
   const [locale] = useLocalePreference();
+  setViewerLocale(locale);
   return (
     // The install's brand from config/brand.env (ADR 0053); OpenAsy's own look where it sets none.
     <BrandProvider theme={theme} locale={locale} brand={{ name: "OpenAsy", organization: undefined, ...installBrand }} className="min-h-screen">

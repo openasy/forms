@@ -74,7 +74,7 @@ import {
   type Draft,
   type DraftField,
 } from "./draft.ts";
-import { useT, type T } from "./i18n.ts";
+import { useT, type T, viewerLocale } from "./i18n.ts";
 
 const KINDS: Kind[] = ["lead", "contact", "nps", "survey"];
 const STATE_TONE: Record<string, Tone> = { open: "success", closed: "warning", full: "warning", draft: "neutral" };
@@ -533,7 +533,7 @@ function FieldsTab({
                   type="button"
                   aria-pressed={f.id === selected}
                   onClick={() => setSelected(f.id)}
-                  className={`flex min-w-0 grow items-center gap-2 rounded-md border px-2 py-1.5 text-left text-sm ${f.id === selected ? "border-accent bg-accent-soft text-accent-text" : "border-line text-fg hover:bg-canvas"}`}
+                  className={`flex min-w-0 grow items-center gap-2 rounded-md border px-2 py-1.5 text-start text-sm ${f.id === selected ? "border-accent bg-accent-soft text-accent-text" : "border-line text-fg hover:bg-canvas"}`}
                 >
                   <Icon aria-hidden className="size-3.5 shrink-0" />
                   <span className="min-w-0 grow truncate">{f.label || f.id}</span>
@@ -709,7 +709,7 @@ function AddFieldDialog({
               type="button"
               aria-pressed={x === type}
               onClick={() => setType(x)}
-              className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-left text-xs ${x === type ? "border-accent bg-accent-soft text-accent-text" : "border-line text-fg hover:bg-canvas"}`}
+              className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-start text-xs ${x === type ? "border-accent bg-accent-soft text-accent-text" : "border-line text-fg hover:bg-canvas"}`}
             >
               <Icon aria-hidden className="size-3.5 shrink-0" />
               {t(`type.${x}`)}
@@ -1033,7 +1033,7 @@ function RoutingTab({ detail }: { detail: FormDetail | null }) {
         <Panel title={t("routing.after")}>
           <ul className="forms-list flex flex-col gap-1 text-xs text-fg">
             <li>{t("routing.partials", { mode: t(`partials.${detail.partials}`) })}</li>
-            {detail.closes && <li>{t("routing.closes", { at: new Date(detail.closes).toLocaleDateString() })}</li>}
+            {detail.closes && <li>{t("routing.closes", { at: new Date(detail.closes).toLocaleDateString(viewerLocale()) })}</li>}
             {detail.limit !== null && <li>{t("routing.limit", { n: detail.limit })}</li>}
           </ul>
         </Panel>

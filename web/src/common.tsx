@@ -3,6 +3,7 @@ import { useAuth } from "@openasy/auth/react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { api, MfaSetupRequired, Unauthorized, type Target } from "./api.ts";
 import type { T } from "./i18n.ts";
+import { viewerLocale } from "./i18n.ts";
 
 /** Data loading with the session; when it ends, the sign-in screen comes back. */
 export function useApi() {
@@ -60,9 +61,9 @@ export function Code({ children, label }: { children: ReactNode; label?: string 
   );
 }
 
-export const fmt = (n: number, locale?: string) => n.toLocaleString(locale);
+export const fmt = (n: number, locale: string = viewerLocale()) => n.toLocaleString(locale);
 export const pct = (n: number, of: number) => (of ? `${Math.round((n / of) * 100)}%` : "–");
-export const when = (iso: string, locale?: string) =>
+export const when = (iso: string, locale: string = viewerLocale()) =>
   new Date(iso).toLocaleString(locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 export const host = (url: string) => URL.parse(url)?.host ?? url;
 export const seconds = (s: number | null) => (s === null ? "–" : s < 60 ? `${s} s` : `${Math.floor(s / 60)} m ${s % 60} s`);

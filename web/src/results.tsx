@@ -17,9 +17,10 @@ import {
 import { useState } from "react";
 import type { FormSummary, Question, Report } from "./api.ts";
 import { fmt, pct, seconds, useLoad, type Call } from "./common.tsx";
-import { useT } from "./i18n.ts";
+import { useT, viewerLocale } from "./i18n.ts";
 
-const monthLabel = (m: string, locale?: string) => new Date(`${m}-15T12:00:00Z`).toLocaleDateString(locale, { month: "short", timeZone: "UTC" });
+const monthLabel = (m: string, locale: string = viewerLocale()) =>
+  new Date(`${m}-15T12:00:00Z`).toLocaleDateString(locale, { month: "short", timeZone: "UTC" });
 
 function QuestionPanel({ q }: { q: Question }) {
   const t = useT();
