@@ -1,6 +1,6 @@
 {
   "name": "@openasy/forms",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "OpenAsy Forms: lead, contact and NPS forms set in a file, embedded with one script tag, with answers kept in your install and sent to Audience, CRM, Helpdesk and Consent.",
   "license": "AGPL-3.0-only",

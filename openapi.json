@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "OpenAsy Forms",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Lead, contact and NPS forms set in forms.yaml: the public API pages and the embed script call, the answers for members, and the erasure contract Audience calls. Viewers read everything; editors mark spam, send again and delete answers; admins take erasures.",
     "license": {
       "name": "AGPL-3.0-only",
