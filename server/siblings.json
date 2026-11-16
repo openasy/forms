@@ -1,6 +1,6 @@
 {
   "audience": {
-    "version": "0.1.0",
+    "version": "0.1.1",
     "operations": {
       "POST /api/v1/events": {
         "requestBody": {
@@ -399,7 +399,7 @@
     }
   },
   "consent": {
-    "version": "0.1.0",
+    "version": "0.1.1",
     "operations": {
       "POST /api/v1/consents": {
         "requestBody": {
@@ -1038,7 +1038,7 @@
     }
   },
   "crm": {
-    "version": "0.1.0",
+    "version": "0.1.1",
     "operations": {
       "POST /api/v1/leads": {
         "requestBody": {
@@ -1420,7 +1420,7 @@
     }
   },
   "helpdesk": {
-    "version": "0.1.0",
+    "version": "0.1.1",
     "operations": {
       "POST /api/v1/public/tickets": {
         "requestBody": {
